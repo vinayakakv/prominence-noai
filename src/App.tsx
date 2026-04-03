@@ -18,6 +18,28 @@ const mountain: [number, number] = [6.4546, 46.1067]
 import mlContour from 'maplibre-contour'
 import { useState } from 'react'
 
+const SOURCE_IDS = {
+  satellite: 'satellite',
+  dem: 'dem',
+  contour: 'contour',
+} as const
+
+const LAYER_IDS = {
+  hillshade: 'hillshade',
+  contour: 'cotour',
+  contourClick: 'cotour-click',
+  selectedContour: 'selected-contour',
+} as const
+
+const SOURCE_LAYERS = {
+  contours: 'contours',
+} as const
+
+const FEATURE_KEYS = {
+  ele: 'ele',
+  level: 'level',
+} as const
+
 export const demSource = new mlContour.DemSource({
   url: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
   encoding: 'terrarium',
@@ -36,9 +58,9 @@ export const contourTileUrl = demSource.contourProtocolUrl({
     13: [20, 100],
     14: [10, 50],
   },
-  elevationKey: 'ele',
-  levelKey: 'level',
-  contourLayer: 'contours',
+  elevationKey: FEATURE_KEYS.ele,
+  levelKey: FEATURE_KEYS.level,
+  contourLayer: SOURCE_LAYERS.contours,
 })
 
 const App = () => {
@@ -64,7 +86,7 @@ const App = () => {
       <RGlobeControl position="top-left" />
       <RScaleControl position="bottom-right" unit="metric" />
       <RSource
-        id="satellite"
+        id={SOURCE_IDS.satellite}
         type="raster"
         tiles={[
           'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -72,16 +94,16 @@ const App = () => {
       />
       <RSource
         type="raster-dem"
-        id="dem"
+        id={SOURCE_IDS.dem}
         tiles={[demSource.sharedDemProtocolUrl]}
         encoding="terrarium"
       />
-      <RSource id="contour" type="vector" tiles={[contourTileUrl]} />
-      {/*<RLayer id="satellite-layer" source="satellite" type="raster" />*/}
+      <RSource id={SOURCE_IDS.contour} type="vector" tiles={[contourTileUrl]} />
+      {/*<RLayer id="satellite-layer" source={SOURCE_IDS.satellite} type="raster" />*/}
       <RLayer
-        id="hillshade"
+        id={LAYER_IDS.hillshade}
         type="hillshade"
-        source="dem"
+        source={SOURCE_IDS.dem}
         paint={{
           'hillshade-exaggeration': 0.5,
           'hillshade-illumination-direction': 335,
@@ -91,40 +113,40 @@ const App = () => {
         }}
       />
       <RLayer
-        id="cotour"
+        id={LAYER_IDS.contour}
         type="line"
-        source="contour"
-        source-layer="contours"
+        source={SOURCE_IDS.contour}
+        source-layer={SOURCE_LAYERS.contours}
         paint={{
           'line-color': [
             'case',
-            ['==', ['get', 'level'], 1],
+            ['==', ['get', FEATURE_KEYS.level], 1],
             '#666666',
             '#aaaaaa',
           ],
-          'line-width': ['case', ['==', ['get', 'level'], 1], 1.5, 0.75],
+          'line-width': ['case', ['==', ['get', FEATURE_KEYS.level], 1], 1.5, 0.75],
           'line-opacity': 0.9,
         }}
       />
       <RLayer
-        id="cotour-click"
+        id={LAYER_IDS.contourClick}
         type="line"
-        source="contour"
-        source-layer="contours"
+        source={SOURCE_IDS.contour}
+        source-layer={SOURCE_LAYERS.contours}
         paint={{
           'line-width': 10,
           'line-opacity': 0,
         }}
         onClick={(e) => {
-          setSelectedElevation(Number(e.features?.at(0)?.properties['ele']))
+          setSelectedElevation(Number(e.features?.at(0)?.properties[FEATURE_KEYS.ele]))
         }}
       />
       <RLayer
-        id="selected-contour"
+        id={LAYER_IDS.selectedContour}
         type="line"
-        source="contour"
-        source-layer="contours"
-        filter={['==', ['get', 'ele'], selectedElevation]}
+        source={SOURCE_IDS.contour}
+        source-layer={SOURCE_LAYERS.contours}
+        filter={['==', ['get', FEATURE_KEYS.ele], selectedElevation]}
         paint={{
           'line-color': '#f97316',
           'line-width': 2.5,
