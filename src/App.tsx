@@ -16,6 +16,7 @@ import {
 const mountain: [number, number] = [6.4546, 46.1067]
 
 import mlContour from 'maplibre-contour'
+import { useState } from 'react'
 
 export const demSource = new mlContour.DemSource({
   url: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
@@ -40,7 +41,11 @@ export const contourTileUrl = demSource.contourProtocolUrl({
   contourLayer: 'contours',
 })
 
-function App() {
+const App = () => {
+  const [selectedElevation, setSelectedElevation] = useState<number | null>(
+    null,
+  )
+  console.log('selectedElevation', selectedElevation)
   return (
     <RMap
       initialCenter={mountain}
@@ -99,6 +104,31 @@ function App() {
           ],
           'line-width': ['case', ['==', ['get', 'level'], 1], 1.5, 0.75],
           'line-opacity': 0.9,
+        }}
+      />
+      <RLayer
+        id="cotour-click"
+        type="line"
+        source="contour"
+        source-layer="contours"
+        paint={{
+          'line-width': 10,
+          'line-opacity': 0,
+        }}
+        onClick={(e) => {
+          setSelectedElevation(Number(e.features?.at(0)?.properties['ele']))
+        }}
+      />
+      <RLayer
+        id="selected-contour"
+        type="line"
+        source="contour"
+        source-layer="contours"
+        filter={['==', ['get', 'ele'], selectedElevation]}
+        paint={{
+          'line-color': '#f97316',
+          'line-width': 2.5,
+          'line-opacity': 1,
         }}
       />
     </RMap>
