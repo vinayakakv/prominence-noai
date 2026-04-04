@@ -11,6 +11,7 @@ import {
   RNavigationControl,
   RScaleControl,
   RSource,
+  RTerrain,
 } from 'maplibre-react-components'
 
 const mountain: [number, number] = [6.4546, 46.1067]
@@ -41,9 +42,9 @@ const FEATURE_KEYS = {
 } as const
 
 export const demSource = new mlContour.DemSource({
-  url: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
+  url: 'https://tiles.mapterhorn.com/{z}/{x}/{y}.webp',
   encoding: 'terrarium',
-  maxzoom: 13,
+  maxzoom: 12,
   worker: true,
 })
 
@@ -73,7 +74,12 @@ const App = () => {
       initialCenter={mountain}
       initialZoom={8}
       id="my-map"
+      initialElevation={0}
+      centerClampedToGround={true}
       mapStyle="https://tiles.openfreemap.org/styles/positron"
+      initialBearing={-20}
+      initialPitch={80}
+      maxPitch={85}
     >
       <RNavigationControl position="top-right" visualizePitch={true} />
       <RGeolocateControl
@@ -97,9 +103,15 @@ const App = () => {
         id={SOURCE_IDS.dem}
         tiles={[demSource.sharedDemProtocolUrl]}
         encoding="terrarium"
+        tileSize={256}
+        minzoom={0}
       />
       <RSource id={SOURCE_IDS.contour} type="vector" tiles={[contourTileUrl]} />
-      {/*<RLayer id="satellite-layer" source={SOURCE_IDS.satellite} type="raster" />*/}
+      {/*<RLayer*/}
+      {/*  id="satellite-layer"*/}
+      {/*  source={SOURCE_IDS.satellite}*/}
+      {/*  type="raster"*/}
+      {/*/>*/}
       <RLayer
         id={LAYER_IDS.hillshade}
         type="hillshade"
@@ -112,6 +124,7 @@ const App = () => {
           'hillshade-accent-color': '#3d2f1e',
         }}
       />
+      <RTerrain source={SOURCE_IDS.dem} exaggeration={1.2} />
       <RLayer
         id={LAYER_IDS.contour}
         type="line"
@@ -124,7 +137,12 @@ const App = () => {
             '#666666',
             '#aaaaaa',
           ],
-          'line-width': ['case', ['==', ['get', FEATURE_KEYS.level], 1], 1.5, 0.75],
+          'line-width': [
+            'case',
+            ['==', ['get', FEATURE_KEYS.level], 1],
+            1.5,
+            0.75,
+          ],
           'line-opacity': 0.9,
         }}
       />
@@ -138,7 +156,9 @@ const App = () => {
           'line-opacity': 0,
         }}
         onClick={(e) => {
-          setSelectedElevation(Number(e.features?.at(0)?.properties[FEATURE_KEYS.ele]))
+          setSelectedElevation(
+            Number(e.features?.at(0)?.properties[FEATURE_KEYS.ele]),
+          )
         }}
       />
       <RLayer
