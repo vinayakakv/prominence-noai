@@ -22,6 +22,7 @@ import { useState } from 'react'
 const SOURCE_IDS = {
   satellite: 'satellite',
   dem: 'dem',
+  terrainDem: 'terrain-dem',
   contour: 'contour',
 } as const
 
@@ -106,6 +107,14 @@ const App = () => {
         tileSize={256}
         minzoom={0}
       />
+      <RSource
+        type="raster-dem"
+        id={SOURCE_IDS.terrainDem}
+        tiles={[demSource.sharedDemProtocolUrl]}
+        encoding="terrarium"
+        tileSize={256}
+        minzoom={0}
+      />
       <RSource id={SOURCE_IDS.contour} type="vector" tiles={[contourTileUrl]} />
       {/*<RLayer*/}
       {/*  id="satellite-layer"*/}
@@ -124,7 +133,7 @@ const App = () => {
           'hillshade-accent-color': '#3d2f1e',
         }}
       />
-      <RTerrain source={SOURCE_IDS.dem} exaggeration={1.2} />
+      <RTerrain source={SOURCE_IDS.terrainDem} exaggeration={1.2} />
       <RLayer
         id={LAYER_IDS.contour}
         type="line"
